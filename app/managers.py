@@ -2,17 +2,13 @@ import cv2
 import numpy
 import time
 
+
 class CaptureManager(object):
 
-
-    def __init__(self, capture, previewWindowManager = None,
-            shouldMirrorPreview = False):
-
-
+    def __init__(self, capture, previewWindowManager=None,
+                 shouldMirrorPreview=False):
         self.previewWindowManager = previewWindowManager
         self.shouldMirrorPreview = shouldMirrorPreview
-
-
         self._capture = capture
         self._channel = 0
         self._enteredFrame = False
@@ -21,7 +17,6 @@ class CaptureManager(object):
         self._videoFilename = None
         self._videoEncoding = None
         self._videoWriter = None
-
         self._startTime = None
         self._framesElapsed = long(0)
         self._fpsEstimate = None
@@ -39,11 +34,11 @@ class CaptureManager(object):
     @property
     def frame(self):
         if self._enteredFrame and self._frame is None:
-            _, self._frame = self._capture.retrieve(channel = self.channel)
+            _, self._frame = self._capture.retrieve(channel=self.channel)
         return self._frame
 
     @property
-    def isWritingImage (self):
+    def isWritingImage(self):
 
         return self._imageFilename is not None
 
@@ -61,7 +56,7 @@ class CaptureManager(object):
         if self._capture is not None:
             self._enteredFrame = self._capture.grab()
 
-    def exitFrame (self):
+    def exitFrame(self):
         """Draw to the window. Write to files. Release the frame."""
 
         # Check whether any grabbed frame is retrievable.
@@ -75,7 +70,7 @@ class CaptureManager(object):
             self._startTime = time.time()
         else:
             timeElapsed = time.time() - self._startTime
-            self._fpsEstimate =  self._framesElapsed / timeElapsed
+            self._fpsEstimate = self._framesElapsed / timeElapsed
         self._framesElapsed += 1
 
         # Draw to the window, if any.
@@ -102,19 +97,17 @@ class CaptureManager(object):
         """Write the next exited frame to an image file."""
         self._imageFilename = filename
 
-    def startWritingVideo(
-            self, filename,
-            encoding = cv2.cv.CV_FOURCC('I','4','2','0')):
+    def startWritingVideo(self, filename,
+                          encoding=cv2.cv.CV_FOURCC('I', '4', '2', '0')):
         """Start writing exited frames to a video file."""
         self._videoFilename = filename
         self._videoEncoding = encoding
 
-    def stopWritingVideo (self):
+    def stopWritingVideo(self):
         """Stop writing exited frames to a video file."""
         self._videoFilename = None
         self._videoEncoding = None
         self._videoWriter = None
-
 
     def _writeVideoFrame(self):
 
@@ -123,51 +116,50 @@ class CaptureManager(object):
 
         if self._videoWriter is None:
             fps = self._capture.get(cv2.cv.CV_CAP_PROP_FPS)
-                if fps == 0.0:
-                    # The capture's FPS is unknown so use an estimate.
-                    if self._framesElapsed < 20:
-                        # Wait until more frames elapse so that the
-                        # estimate is more stable.
-                        return
-                    else:
-                        fps = self._fpsEstimate
-                        size = (int(self._capture.get(
-                            cv2.cv.CV_CAP_PROP_FRAME_WIDTH)),
+            if fps == 0.0:
+                # The capture's FPS is unknown so use an estimate.
+                if self._framesElapsed < 20:
+                    # Wait until more frames elapse so that the
+                    # estimate is more stable.
+                    return
+                else:
+                    fps = self._fpsEstimate
+                    size = (int(self._capture.get(
+                                cv2.cv.CV_CAP_PROP_FRAME_WIDTH)),
                             int(self._capture.get(
-                                cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)))
-                        self._videoWriter = cv2.VideoWriter(
-                                self._videoFilename, self._videoEncoding,
-                                fps, size)
-                        self._videoWriter.write(self._frame)
-
+                                cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+                            )
+                    self._videoWriter = cv2.VideoWriter(self._videoFilename,
+                                                        self._videoEncoding,
+                                                        fps,
+                                                        size)
+                    self._videoWriter.write(self._frame)
 
 
 class WindowManager(object):
 
-
-    def __init__(self, windowName, keypressCallback = None):
+    def __init__(self, windowName, keypressCallback=None):
         self.keypressCallback = keypressCallback
 
         self._windowName = windowName
         self._isWindowCreated = False
 
-
     @property
     def isWindowCreated(self):
         return self._isWindowCreated
 
-    def createWindow (self):
+    def createWindow(self):
         cv2.namedWindow(self._windowName)
         self._isWindowCreated = True
 
     def show(self, frame):
         cv2.imshow(self._windowName, frame)
 
-    def destroyWindow (self):
+    def destroyWindow(self):
         cv2.destroyWindow(self._windowName)
         self._isWindowCreated = False
 
-    def processEvents (self):
+    def processEvents(self):
         keycode = cv2.waitKey(1)
         if self.keypressCallback is not None and keycode != -1:
             # Discard any non-ASCII info encoded by GTK.
